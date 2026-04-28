@@ -16,6 +16,8 @@ import { UserProvider } from './context/user';
 import { FavouritesProvider } from "./context/FavouritesContext";
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import WeatherAwareRouting from "./pages/WeatherAwareRouting";
+
 
 
 
@@ -39,6 +41,7 @@ function App() {
             <Route path="/voice-query" element={<VoiceQueryPage />} />
             <Route path="/insights-form" element={<PersonalisedInsightsForm />} />
             <Route path="/insights" element={<PersonalisedInsights />} />
+            <Route path="/weather-routing" element={<WeatherAwareRouting />} />
             {/* Catch-all Route */}
             <Route path="*" element={<div>404 Page Not Found</div>} />
           </Routes>
