@@ -1,6 +1,6 @@
 import React from "react";
 
-export default function WeatherAwareSelection({selectedLocation, weatherYear, setWeatherYear, weatherLoading, weatherError, onClick}) {
+export default function WeatherAwareSelection({selectedLocation, weatherYear, setWeatherYear, weatherLoading, weatherError, onClick, handleReset}) {
     return (
         <div style={{
             position: 'absolute',
@@ -28,32 +28,7 @@ export default function WeatherAwareSelection({selectedLocation, weatherYear, se
                 <p><strong>Lon:</strong> {selectedLocation?.lon.toFixed(5)}</p>
             </div>
 
-            <label style={{
-            fontSize: '13px',
-            fontWeight: '600',
-            color: '#374151'
-            }}>
-            Year
-            </label>
-
-            <input
-            type="number"
-            value={weatherYear}
-            onChange={(e) => setWeatherYear(e.target.value)}
-            style={{
-                width: '90%',
-                padding: '12px',
-                marginTop: '6px',
-                marginBottom: '14px',
-                borderRadius: '10px',
-                border: '1px solid #d1d5db',
-                fontSize: '15px',
-                outline: 'none'
-            }}
-            />
-
             <button
-            //onClick={handleCalculateEnergy}
             onClick={onClick}
             disabled={weatherLoading}
             style={{
@@ -72,11 +47,29 @@ export default function WeatherAwareSelection({selectedLocation, weatherYear, se
             {weatherLoading ? "Calculating..." : "Calculate Energy"}
             </button>
 
+            <button
+            onClick={handleReset}
+            style={{
+                width: '100%',
+                marginTop: '10px',
+                padding: '14px',
+                backgroundColor: '#f0f0f0',
+                color: '#333',
+                border: '1px solid #ddd',
+                borderRadius: '12px',
+                cursor: 'pointer',
+                fontSize: '16px',
+                boxShadow: '0 6px 18px rgba(0, 0, 0, 0.2)'
+            }}>
+            Reset
+            </button>
+
             {weatherError && (
             <p style={{
                 color: '#dc2626',
                 marginTop: '10px',
-                fontSize: '13px'
+                fontSize: '13px',
+                textAlign: 'center'
             }}>
                 {weatherError}
             </p>

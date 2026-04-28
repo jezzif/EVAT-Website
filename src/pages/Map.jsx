@@ -4,15 +4,12 @@ import L from 'leaflet';
 import { UserContext } from '../context/user';
 import { FavouritesContext } from '../context/FavouritesContext';
 import { getChargers, getConnectorTypes, getOperatorTypes } from '../services/chargerService';
-import { predictWeatherAwareRouting } from '../services/weatherAwareRoutingService';
 import NavBar from '../components/NavBar';
 import LocateUser from '../components/LocateUser';
 import ClusterMarkers from '../components/ClusterMarkers';
 import SmartFilter from '../components/SmartFilter';
 import ChatBubble from "../components/ChatBubble";
 import ChargerSideBar from '../components/ChargerSideBar';
-import WeatherAwareSelection from '../components/WeatherAwareSelection';
-import WeatherAwareResult from '../components/WeatherAwareResult';
 
 // styles
 import 'leaflet/dist/leaflet.css';
@@ -125,19 +122,6 @@ function BoundsWatcher({ onChange }) {
   return null;
 }
 
-function MapClickHandler({ onLocationSelect }) {
-  useMapEvents({
-    click(e) {
-      onLocationSelect({
-        lat: e.latlng.lat,
-        lon: e.latlng.lng,
-      });
-    },
-  });
-
-  return null;
-}
-
 export default function Map() {
   const { user } = useContext(UserContext);
 
@@ -166,50 +150,6 @@ export default function Map() {
 
   // local UI state for the floating dark-mode button icon
   const [isDark, setIsDark] = useState(false);
-
-  const [selectedLocation, setSelectedLocation] = useState(null);
-  const [weatherYear, setWeatherYear] = useState(2023);
-  const [weatherResult, setWeatherResult] = useState({
-    prediction: null,
-    dist_to_nearest_ev_m: null,
-    ev_within_500m: null,
-    avg_temp: null,
-    total_prcp: null,
-    used_SHAPE_Length: null
-  });
-  const [weatherLoading, setWeatherLoading] = useState(false);
-  const [weatherError, setWeatherError] = useState('');
-
-  const handleCalculateEnergy = async () => {
-    if (!selectedLocation) {
-      setWeatherError("Please click on the map to select a location first.");
-      return;
-    }
-
-    setWeatherLoading(true);
-    setWeatherError('');
-
-    try {
-      const payload = {
-        year: Number(weatherYear),
-        start_lat: selectedLocation.lat,
-        start_lon: selectedLocation.lon,
-      };
-      const data = await predictWeatherAwareRouting(payload, user?.token);
-      setWeatherResult({...weatherResult,
-        prediction: data.prediction,
-        dist_to_nearest_ev_m: data.dist_to_nearest_ev_m,
-        ev_within_500m: data.ev_within_500m,
-        avg_temp: data.avg_temp,
-        total_prcp: data.total_prcp,
-        used_SHAPE_Length: data.used_SHAPE_Length});
-    } catch (error) {
-      console.log(error);
-      setWeatherError(error.message || "Something went wrong while calculating energy.");
-    } finally {
-      setWeatherLoading(false);
-    }
-  };
 
   // toggle dark mode only when inside the Map page
   useEffect(() => {
@@ -450,15 +390,6 @@ export default function Map() {
             </div>
           </div>
         )}
-
-        <WeatherAwareSelection
-        selectedLocation={selectedLocation}
-        weatherYear={weatherYear}
-        setWeatherYear={setWeatherYear}
-        weatherError={weatherError}
-        weatherLoading={weatherLoading}
-        onClick={handleCalculateEnergy}/>
-
         <MapContainer
           className="map-visible-area hide-scrollbar"
           center={[-37.8136, 144.9631]}
@@ -469,11 +400,6 @@ export default function Map() {
             attribution="&copy; OpenStreetMap contributors"
           />
           <BoundsWatcher onChange={setBbox} />
-          <MapClickHandler onLocationSelect={setSelectedLocation} />
-          
-          {selectedLocation && (
-            <Marker position={[selectedLocation.lat, selectedLocation.lon]} />
-          )}
           <ClusterMarkers
             showCongestion={filters.showCongestion}
             stations={filteredStations}
@@ -481,8 +407,6 @@ export default function Map() {
           />
           <LocateUser />
         </MapContainer>
-
-        {weatherResult.prediction && <WeatherAwareResult weatherResult={weatherResult}/>}
 
         <button
           className="btn btn-primary btn-dark-mode"

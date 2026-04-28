@@ -12,6 +12,7 @@ import ApiTester from './pages/ApiTester';
 import VoiceQueryPage from './pages/VoiceQueryPage';
 import PersonalisedInsightsForm from "./pages/PersonalisedInsightsForm";
 import PersonalisedInsights from "./pages/PersonalisedInsights";
+import WeatherAwareRouting from "./pages/WeatherAwareRouting";
 import { UserProvider } from './context/user';
 import { FavouritesProvider } from "./context/FavouritesContext";
 import { ToastContainer } from 'react-toastify';
@@ -39,6 +40,7 @@ function App() {
             <Route path="/voice-query" element={<VoiceQueryPage />} />
             <Route path="/insights-form" element={<PersonalisedInsightsForm />} />
             <Route path="/insights" element={<PersonalisedInsights />} />
+            <Route path="/weather-aware-routing" element={<WeatherAwareRouting />} />
             {/* Catch-all Route */}
             <Route path="*" element={<div>404 Page Not Found</div>} />
           </Routes>
