@@ -11,6 +11,8 @@ import ClusterMarkers from '../components/ClusterMarkers';
 import SmartFilter from '../components/SmartFilter';
 import ChatBubble from "../components/ChatBubble";
 import ChargerSideBar from '../components/ChargerSideBar';
+import WeatherAwareSelection from '../components/WeatherAwareSelection';
+import WeatherAwareResult from '../components/WeatherAwareResult';
 
 // styles
 import 'leaflet/dist/leaflet.css';
@@ -186,7 +188,6 @@ export default function Map() {
 
     setWeatherLoading(true);
     setWeatherError('');
-    //setWeatherResult(null);
 
     try {
       const payload = {
@@ -450,85 +451,13 @@ export default function Map() {
           </div>
         )}
 
-        <div style={{
-          position: 'absolute',
-          top: 90,
-          left: 24,
-          zIndex: 1000,
-          background: '#ffffff',
-          padding: '22px',
-          borderRadius: '18px',
-          boxShadow: '0 10px 30px rgba(0,0,0,0.15)',
-          width: '320px',
-          fontFamily: 'Inter, sans-serif'
-        }}>
-          <h2 style={{
-            fontSize: '24px',
-            fontWeight: '800',
-            marginBottom: '16px',
-            color: '#111827'
-          }}>
-            Weather-Aware Routing
-          </h2>
-
-          <div style={{ fontSize: '14px', marginBottom: '12px', color: '#4b5563' }}>
-            <p><strong>Lat:</strong> {selectedLocation?.lat.toFixed(5)}</p>
-            <p><strong>Lon:</strong> {selectedLocation?.lon.toFixed(5)}</p>
-          </div>
-
-          <label style={{
-            fontSize: '13px',
-            fontWeight: '600',
-            color: '#374151'
-          }}>
-            Year
-          </label>
-
-          <input
-            type="number"
-            value={weatherYear}
-            onChange={(e) => setWeatherYear(e.target.value)}
-            style={{
-              width: '90%',
-              padding: '12px',
-              marginTop: '6px',
-              marginBottom: '14px',
-              borderRadius: '10px',
-              border: '1px solid #d1d5db',
-              fontSize: '15px',
-              outline: 'none'
-            }}
-          />
-
-          <button
-            onClick={handleCalculateEnergy}
-            disabled={weatherLoading}
-            style={{
-              width: '100%',
-              padding: '14px',
-              borderRadius: '12px',
-              border: 'none',
-              background: 'linear-gradient(135deg, #22c55e, #16a34a)',
-              color: '#fff',
-              fontSize: '16px',
-              fontWeight: '700',
-              cursor: 'pointer',
-              boxShadow: '0 6px 18px rgba(34,197,94,0.3)'
-            }}
-          >
-            {weatherLoading ? "Calculating..." : "Calculate Energy"}
-          </button>
-
-          {weatherError && (
-            <p style={{
-              color: '#dc2626',
-              marginTop: '10px',
-              fontSize: '13px'
-            }}>
-              {weatherError}
-            </p>
-          )}
-        </div>
+        <WeatherAwareSelection
+        selectedLocation={selectedLocation}
+        weatherYear={weatherYear}
+        setWeatherYear={setWeatherYear}
+        weatherError={weatherError}
+        weatherLoading={weatherLoading}
+        onClick={handleCalculateEnergy}/>
 
         <MapContainer
           className="map-visible-area hide-scrollbar"
@@ -553,38 +482,7 @@ export default function Map() {
           <LocateUser />
         </MapContainer>
 
-        {weatherResult.prediction && (
-          <div style={{
-            position: 'absolute',
-            right: 24,
-            bottom: 90,
-            zIndex: 1000,
-            background: '#ffffff',
-            color: '#111827',
-            opacity: 1,
-            padding: '22px',
-            borderRadius: '18px',
-            boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
-            width: '340px'
-          }}>
-            <h2 style={{
-              fontSize: '22px',
-              fontWeight: '800',
-              marginBottom: '16px',
-              color: '#111827'
-            }}>
-              ML Prediction Result
-            </h2>
-
-            <div style={{ display: 'grid', gap: '10px', fontSize: '14px' }}>
-              <div><strong>Prediction:</strong> {weatherResult.prediction.toFixed(2)}</div>
-              <div><strong>Nearest EV:</strong> {Math.round(weatherResult.dist_to_nearest_ev_m)} m</div>
-              <div><strong>EV within 500m:</strong> {weatherResult.ev_within_500m ? "Yes" : "No"}</div>
-              <div><strong>Avg Temp:</strong> {weatherResult.avg_temp.toFixed(1)} °C</div>
-              <div><strong>Precipitation:</strong> {Math.round(weatherResult.total_prcp)}</div>
-              <div><strong>Road Length:</strong> {weatherResult.used_SHAPE_Length.toFixed(2)}</div>
-            </div>
-          </div>)}
+        {weatherResult.prediction && <WeatherAwareResult weatherResult={weatherResult}/>}
 
         <button
           className="btn btn-primary btn-dark-mode"
