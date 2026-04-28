@@ -246,6 +246,20 @@ const templates = {
   "updatedAt": "2025-09-07T04:00:00Z";
 }`,
 
+// WeatherAwareRoute
+  weatherAwareRouteBody:
+`{
+  "year": "number";
+  "start_lat": "number";
+  "start_lon": "number";
+  "prediction": "number";
+  "dist_to_nearest_ev_m": "number";
+  "ev_within_500m": "number";
+  "avg_temp": "number";
+  "total_prcp": "number";
+  "used_SHAPE_Length": "number";
+}`
+
 };
 
 // Admin Auth Route
@@ -373,6 +387,11 @@ const insight = [
   { method: 'GET',    endpoint: '/personalised-ev-insights/{userId}',         label: 'Get insight by ID' }
 ];
 
+//Weather Aware Routing Route
+const weatherAwareRoute = [
+  { method: 'POST',   endpoint: '/weather-aware-routing/predict',  label: 'Get weather data',  body: templates.weatherAwareRouteBody},
+]
+
 // export all groups
 export {
   adminAuth,
@@ -390,6 +409,7 @@ export {
   vehicle,
   iceVehicle,
   insight,
+  weatherAwareRoute,
 };
 
 // export as one array
@@ -409,6 +429,7 @@ export const allEndpoints = [
   ...vehicle,
   ...iceVehicle,
   ...insight,
+  ...weatherAwareRoute,
 ];
 
 //export default apiEndpoints;

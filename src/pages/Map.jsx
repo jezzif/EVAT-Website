@@ -1,9 +1,10 @@
 import React, { useEffect, useState, useMemo, useContext } from 'react';
-import { MapContainer, TileLayer, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, useMapEvents, Marker } from 'react-leaflet';
 import L from 'leaflet';
 import { UserContext } from '../context/user';
 import { FavouritesContext } from '../context/FavouritesContext';
 import { getChargers, getConnectorTypes, getOperatorTypes } from '../services/chargerService';
+import { predictWeatherAwareRouting } from '../services/weatherAwareRoutingService';
 import NavBar from '../components/NavBar';
 import LocateUser from '../components/LocateUser';
 import ClusterMarkers from '../components/ClusterMarkers';
@@ -122,6 +123,19 @@ function BoundsWatcher({ onChange }) {
   return null;
 }
 
+function MapClickHandler({ onLocationSelect }) {
+  useMapEvents({
+    click(e) {
+      onLocationSelect({
+        lat: e.latlng.lat,
+        lon: e.latlng.lng,
+      });
+    },
+  });
+
+  return null;
+}
+
 export default function Map() {
   const { user } = useContext(UserContext);
 
@@ -150,6 +164,51 @@ export default function Map() {
 
   // local UI state for the floating dark-mode button icon
   const [isDark, setIsDark] = useState(false);
+
+  const [selectedLocation, setSelectedLocation] = useState(null);
+  const [weatherYear, setWeatherYear] = useState(2023);
+  const [weatherResult, setWeatherResult] = useState({
+    prediction: null,
+    dist_to_nearest_ev_m: null,
+    ev_within_500m: null,
+    avg_temp: null,
+    total_prcp: null,
+    used_SHAPE_Length: null
+  });
+  const [weatherLoading, setWeatherLoading] = useState(false);
+  const [weatherError, setWeatherError] = useState('');
+
+  const handleCalculateEnergy = async () => {
+    if (!selectedLocation) {
+      setWeatherError("Please click on the map to select a location first.");
+      return;
+    }
+
+    setWeatherLoading(true);
+    setWeatherError('');
+    //setWeatherResult(null);
+
+    try {
+      const payload = {
+        year: Number(weatherYear),
+        start_lat: selectedLocation.lat,
+        start_lon: selectedLocation.lon,
+      };
+      const data = await predictWeatherAwareRouting(payload, user?.token);
+      setWeatherResult({...weatherResult,
+        prediction: data.prediction,
+        dist_to_nearest_ev_m: data.dist_to_nearest_ev_m,
+        ev_within_500m: data.ev_within_500m,
+        avg_temp: data.avg_temp,
+        total_prcp: data.total_prcp,
+        used_SHAPE_Length: data.used_SHAPE_Length});
+    } catch (error) {
+      console.log(error);
+      setWeatherError(error.message || "Something went wrong while calculating energy.");
+    } finally {
+      setWeatherLoading(false);
+    }
+  };
 
   // toggle dark mode only when inside the Map page
   useEffect(() => {
@@ -391,12 +450,101 @@ export default function Map() {
           </div>
         )}
 
-        <MapContainer className="map-visible-area hide-scrollbar " center={[-37.8136, 144.9631]} zoom={13}>
+        <div style={{
+          position: 'absolute',
+          top: 90,
+          left: 24,
+          zIndex: 1000,
+          background: '#ffffff',
+          padding: '22px',
+          borderRadius: '18px',
+          boxShadow: '0 10px 30px rgba(0,0,0,0.15)',
+          width: '320px',
+          fontFamily: 'Inter, sans-serif'
+        }}>
+          <h2 style={{
+            fontSize: '24px',
+            fontWeight: '800',
+            marginBottom: '16px',
+            color: '#111827'
+          }}>
+            Weather-Aware Routing
+          </h2>
+
+          <div style={{ fontSize: '14px', marginBottom: '12px', color: '#4b5563' }}>
+            <p><strong>Lat:</strong> {selectedLocation?.lat.toFixed(5)}</p>
+            <p><strong>Lon:</strong> {selectedLocation?.lon.toFixed(5)}</p>
+          </div>
+
+          <label style={{
+            fontSize: '13px',
+            fontWeight: '600',
+            color: '#374151'
+          }}>
+            Year
+          </label>
+
+          <input
+            type="number"
+            value={weatherYear}
+            onChange={(e) => setWeatherYear(e.target.value)}
+            style={{
+              width: '90%',
+              padding: '12px',
+              marginTop: '6px',
+              marginBottom: '14px',
+              borderRadius: '10px',
+              border: '1px solid #d1d5db',
+              fontSize: '15px',
+              outline: 'none'
+            }}
+          />
+
+          <button
+            onClick={handleCalculateEnergy}
+            disabled={weatherLoading}
+            style={{
+              width: '100%',
+              padding: '14px',
+              borderRadius: '12px',
+              border: 'none',
+              background: 'linear-gradient(135deg, #22c55e, #16a34a)',
+              color: '#fff',
+              fontSize: '16px',
+              fontWeight: '700',
+              cursor: 'pointer',
+              boxShadow: '0 6px 18px rgba(34,197,94,0.3)'
+            }}
+          >
+            {weatherLoading ? "Calculating..." : "Calculate Energy"}
+          </button>
+
+          {weatherError && (
+            <p style={{
+              color: '#dc2626',
+              marginTop: '10px',
+              fontSize: '13px'
+            }}>
+              {weatherError}
+            </p>
+          )}
+        </div>
+
+        <MapContainer
+          className="map-visible-area hide-scrollbar"
+          center={[-37.8136, 144.9631]}
+          zoom={13}
+        >
           <TileLayer
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             attribution="&copy; OpenStreetMap contributors"
           />
           <BoundsWatcher onChange={setBbox} />
+          <MapClickHandler onLocationSelect={setSelectedLocation} />
+          
+          {selectedLocation && (
+            <Marker position={[selectedLocation.lat, selectedLocation.lon]} />
+          )}
           <ClusterMarkers
             showCongestion={filters.showCongestion}
             stations={filteredStations}
@@ -404,6 +552,39 @@ export default function Map() {
           />
           <LocateUser />
         </MapContainer>
+
+        {weatherResult.prediction && (
+          <div style={{
+            position: 'absolute',
+            right: 24,
+            bottom: 90,
+            zIndex: 1000,
+            background: '#ffffff',
+            color: '#111827',
+            opacity: 1,
+            padding: '22px',
+            borderRadius: '18px',
+            boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
+            width: '340px'
+          }}>
+            <h2 style={{
+              fontSize: '22px',
+              fontWeight: '800',
+              marginBottom: '16px',
+              color: '#111827'
+            }}>
+              ML Prediction Result
+            </h2>
+
+            <div style={{ display: 'grid', gap: '10px', fontSize: '14px' }}>
+              <div><strong>Prediction:</strong> {weatherResult.prediction.toFixed(2)}</div>
+              <div><strong>Nearest EV:</strong> {Math.round(weatherResult.dist_to_nearest_ev_m)} m</div>
+              <div><strong>EV within 500m:</strong> {weatherResult.ev_within_500m ? "Yes" : "No"}</div>
+              <div><strong>Avg Temp:</strong> {weatherResult.avg_temp.toFixed(1)} °C</div>
+              <div><strong>Precipitation:</strong> {Math.round(weatherResult.total_prcp)}</div>
+              <div><strong>Road Length:</strong> {weatherResult.used_SHAPE_Length.toFixed(2)}</div>
+            </div>
+          </div>)}
 
         <button
           className="btn btn-primary btn-dark-mode"
