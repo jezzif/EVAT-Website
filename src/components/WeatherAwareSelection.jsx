@@ -1,18 +1,16 @@
 import React from "react";
+import { useNavigate } from 'react-router-dom';
 
-export default function WeatherAwareSelection({selectedLocation, weatherYear, setWeatherYear, weatherLoading, weatherError, onClick, handleReset}) {
+import "../styles/Map.css"
+import "../styles/Buttons.css"
+
+export default function WeatherAwareSelection({selectedLocation, weatherYear, setWeatherYear, weatherLoading, weatherError, onClick, handleReset, isDark}) {
+    const navigate = useNavigate();
+
     return (
-        <div style={{
-            position: 'absolute',
+        <div className={`overlay ${isDark ? "dark" : ""}`} style={{
             top: 90,
             left: 24,
-            zIndex: 1000,
-            background: '#ffffff',
-            padding: '22px',
-            borderRadius: '18px',
-            boxShadow: '0 10px 30px rgba(0,0,0,0.15)',
-            width: '320px',
-            fontFamily: 'Inter, sans-serif'
         }}>
             <h2 style={{
             fontSize: '24px',
@@ -22,8 +20,8 @@ export default function WeatherAwareSelection({selectedLocation, weatherYear, se
             }}>
             Weather-Aware Routing
             </h2>
-
-            <div style={{ fontSize: '14px', marginBottom: '12px', color: '#4b5563' }}>
+            {/* color: '#4b5563' */}
+            <div style={{ fontSize: '14px', marginBottom: '12px' }}>
                 <p><strong>Lat:</strong> {selectedLocation?.lat.toFixed(5)}</p>
                 <p><strong>Lon:</strong> {selectedLocation?.lon.toFixed(5)}</p>
             </div>
@@ -74,6 +72,24 @@ export default function WeatherAwareSelection({selectedLocation, weatherYear, se
                 {weatherError}
             </p>
             )}
+
+            <hr className="separator"></hr>
+
+            <button
+            onClick={() => navigate('/profile')}
+            style={{
+                width: '100%',
+                marginTop: '10px',
+                padding: '14px',
+                backgroundColor: '#f0f0f0',
+                color: '#333',
+                border: '1px solid #ddd',
+                borderRadius: '12px',
+                cursor: 'pointer',
+                fontSize: '16px',
+                boxShadow: '0 6px 18px rgba(0, 0, 0, 0.2)'
+            }}>Back to Dashboard
+            </button>
         </div>
     );
 }

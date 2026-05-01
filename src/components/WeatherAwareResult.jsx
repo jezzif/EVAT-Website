@@ -1,19 +1,12 @@
 import React from "react";
 
-export default function WeatherAwareResult({weatherResult}) {
+import "../styles/Map.css"
+
+export default function WeatherAwareResult({weatherResult, isDark}) {
     return(
-        <div style={{
-        position: 'absolute',
+        <div className={`overlay ${isDark ? "dark" : ""}`} style={{
         right: 24,
         bottom: 90,
-        zIndex: 1000,
-        background: '#ffffff',
-        color: '#111827',
-        opacity: 1,
-        padding: '22px',
-        borderRadius: '18px',
-        boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
-        width: '340px'
         }}>
         <h2 style={{
             fontSize: '22px',

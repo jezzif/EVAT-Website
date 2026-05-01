@@ -193,7 +193,8 @@ export default function Map() {
         weatherError={weatherError}
         weatherLoading={weatherLoading}
         onClick={handleCalculateEnergy}
-        handleReset={handleReset}/>
+        handleReset={handleReset}
+        isDark={isDark}/>
 
         <MapContainer
           className="map-visible-area hide-scrollbar"
@@ -213,7 +214,7 @@ export default function Map() {
           <LocateUser />
         </MapContainer>
 
-        {weatherResult.prediction && <WeatherAwareResult weatherResult={weatherResult}/>}
+        {weatherResult.prediction && <WeatherAwareResult weatherResult={weatherResult} isDark={isDark} />}
 
         <button
           className="btn btn-primary btn-dark-mode"

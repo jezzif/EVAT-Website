@@ -14,6 +14,7 @@ import BookingHistoryTable from "../components/BookingHistoryTable";
 import EnvironmentalImpact from "../components/EnvironmentalImpact";
 import ErrorMessage from '../components/ErrorMessage'
 import SuccessMessage from '../components/SuccessMessage'
+import WeatherMapComponent from '../components/WeatherMapComponent'
 
 import '../styles/Root.css';
 import '../styles/Buttons.css';
@@ -492,6 +493,7 @@ function Profile() {
               <button className="btn btn-primary two-hundred-width spread" onClick={() => setActiveTab("env-impact")}> Environmental Impact</button>
               <button className="btn btn-primary two-hundred-width spread" onClick={() => navigate('/insights-form')}>Submit EV Insight</button>
               <button className="btn btn-primary two-hundred-width spread" onClick={() => navigate('/insights')}>View EV Insights</button>
+              <button className="btn btn-primary two-hundred-width spread" onClick={() => navigate('/weather-aware-routing')}> Weather Aware Routing</button>
             </>
           )}
 
