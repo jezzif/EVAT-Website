@@ -5,7 +5,7 @@ import "../styles/Map.css"
 export default function WeatherAwareResult({weatherResult, isDark}) {
     return(
         <div className={`overlay ${isDark ? "dark" : ""}`} style={{
-        right: 24,
+        right: 50,
         bottom: 90,
         }}>
         <h2 style={{
