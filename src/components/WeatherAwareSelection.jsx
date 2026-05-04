@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import "../styles/Map.css"
 import "../styles/Buttons.css"
 
-export default function WeatherAwareSelection({selectedLocation, weatherYear, setWeatherYear, weatherLoading, weatherError, onClick, handleReset, isDark}) {
+export default function WeatherAwareSelection({selectedLocation, weatherYear, weatherLoading, weatherError, onClick, handleReset, isDark}) {
     const navigate = useNavigate();
 
     return (

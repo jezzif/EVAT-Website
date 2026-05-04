@@ -1,34 +1,17 @@
 import React, { useEffect, useState, useMemo, useContext, useCallback } from 'react';
 import { MapContainer, TileLayer, useMapEvents, Marker } from 'react-leaflet';
-import L from 'leaflet';
 import { UserContext } from '../context/user';
-import { FavouritesContext } from '../context/FavouritesContext';
-import { getChargers, getConnectorTypes, getOperatorTypes } from '../services/chargerService';
 import { predictWeatherAwareRouting } from '../services/weatherAwareRoutingService';
 import LocateUser from './LocateUser';
 import WeatherAwareSelection from './WeatherAwareSelection';
 import WeatherAwareResult from './WeatherAwareResult';
 
 // styles
-import 'leaflet/dist/leaflet.css';
-import 'leaflet.markercluster/dist/MarkerCluster.css';
-import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 import '../styles/Root.css';
 import '../styles/Map.css';
 import '../styles/Buttons.css';
 import '../styles/Elements.css';
 import '../styles/Fonts.css';
-import '../styles/Forms.css';
-import '../styles/Tables.css';
-import '../styles/Validation.css';
-
-// Configure default Leaflet marker icons
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png'
-});
 
 // Watches map bounds (bbox) and reports them upward
 function BoundsWatcher({ onChange }) {
@@ -189,7 +172,6 @@ export default function Map() {
         <WeatherAwareSelection
         selectedLocation={selectedLocation}
         weatherYear={weatherYear}
-        setWeatherYear={setWeatherYear}
         weatherError={weatherError}
         weatherLoading={weatherLoading}
         onClick={handleCalculateEnergy}
