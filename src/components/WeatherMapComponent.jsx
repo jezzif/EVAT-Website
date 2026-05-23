@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, useContext, useCallback } from 'react';
+import React, { useEffect, useState, useContext, useCallback } from 'react';
 import { MapContainer, TileLayer, useMapEvents, Marker } from 'react-leaflet';
 import { UserContext } from '../context/user';
 import { predictWeatherAwareRouting } from '../services/weatherAwareRoutingService';
@@ -47,28 +47,36 @@ export default function Map() {
   const { user } = useContext(UserContext);
 
   const [bbox, setBbox] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [err, setErr] = useState('');
+  const [loading] = useState(false);
 
   // local UI state for the floating dark-mode button icon
   const [isDark, setIsDark] = useState(false);
 
-  const [selectedLocation, setSelectedLocation] = useState(null);
-  const [weatherYear, setWeatherYear] = useState(2023);
-  const [weatherResult, setWeatherResult] = useState({
-    prediction: null,
-    dist_to_nearest_ev_m: null,
-    ev_within_500m: null,
-    avg_temp: null,
-    total_prcp: null,
-    used_SHAPE_Length: null
-  });
+  // New route selection state
+  const [originLocation, setOriginLocation] = useState(null);
+  const [destinationLocation, setDestinationLocation] = useState(null);
+  const [activeField, setActiveField] = useState("origin");
+  const [acOn, setAcOn] = useState(true);
+
+  const [weatherResult, setWeatherResult] = useState(null);
   const [weatherLoading, setWeatherLoading] = useState(false);
   const [weatherError, setWeatherError] = useState('');
 
+  const handleLocationSelect = (location) => {
+    if (activeField === "origin") {
+      setOriginLocation(location);
+      setActiveField("destination");
+    } else {
+      setDestinationLocation(location);
+    }
+
+    setWeatherResult(null);
+    setWeatherError("");
+  };
+
   const handleCalculateEnergy = async () => {
-    if (!selectedLocation) {
-      setWeatherError("Please click on the map to select a location first.");
+    if (!originLocation || !destinationLocation) {
+      setWeatherError("Please select both origin and destination on the map.");
       return;
     }
 
@@ -77,18 +85,13 @@ export default function Map() {
 
     try {
       const payload = {
-        year: Number(weatherYear),
-        start_lat: selectedLocation.lat,
-        start_lon: selectedLocation.lon,
+        origin: `${originLocation.lat},${originLocation.lon}`,
+        destination: `${destinationLocation.lat},${destinationLocation.lon}`,
+        ac_on: acOn,
       };
+
       const data = await predictWeatherAwareRouting(payload, user?.token);
-      setWeatherResult({...weatherResult,
-        prediction: data.prediction,
-        dist_to_nearest_ev_m: data.dist_to_nearest_ev_m,
-        ev_within_500m: data.ev_within_500m,
-        avg_temp: data.avg_temp,
-        total_prcp: data.total_prcp,
-        used_SHAPE_Length: data.used_SHAPE_Length});
+      setWeatherResult(data);
     } catch (error) {
       console.log(error);
       setWeatherError(error.message || "Something went wrong while calculating energy.");
@@ -98,10 +101,12 @@ export default function Map() {
   };
 
   const handleReset = useCallback(() => {
-    setSelectedLocation(null);
-    setWeatherResult({...weatherResult, prediction: null});
-    setWeatherError(null);
-    setMapCenter(defaultCenter);
+    setOriginLocation(null);
+    setDestinationLocation(null);
+    setActiveField("origin");
+    setAcOn(true);
+    setWeatherResult(null);
+    setWeatherError("");
   }, []);
 
   // toggle dark mode only when inside the Map page
@@ -111,6 +116,7 @@ export default function Map() {
     } else {
       document.body.classList.remove("dark-mode");
     }
+
     return () => {
       document.body.classList.remove("dark-mode");
     };
@@ -144,6 +150,7 @@ export default function Map() {
             </div>
           </div>
         )}
+
         {!user?.token && (
           <div className="map-status-message map-warning" style={{
             position: 'absolute',
@@ -164,19 +171,24 @@ export default function Map() {
               ⚠️ Login Required
             </div>
             <div style={{ fontSize: '13px', opacity: 0.9 }}>
-              Please log in to search for charging stations
+              Please log in to use weather-aware routing
             </div>
           </div>
         )}
 
         <WeatherAwareSelection
-        selectedLocation={selectedLocation}
-        weatherYear={weatherYear}
-        weatherError={weatherError}
-        weatherLoading={weatherLoading}
-        onClick={handleCalculateEnergy}
-        handleReset={handleReset}
-        isDark={isDark}/>
+          originLocation={originLocation}
+          destinationLocation={destinationLocation}
+          activeField={activeField}
+          setActiveField={setActiveField}
+          acOn={acOn}
+          setAcOn={setAcOn}
+          weatherError={weatherError}
+          weatherLoading={weatherLoading}
+          onClick={handleCalculateEnergy}
+          handleReset={handleReset}
+          isDark={isDark}
+        />
 
         <MapContainer
           className="map-visible-area hide-scrollbar"
@@ -187,16 +199,24 @@ export default function Map() {
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             attribution="&copy; OpenStreetMap contributors"
           />
+
           <BoundsWatcher onChange={setBbox} />
-          <MapClickHandler onLocationSelect={setSelectedLocation} />
-          
-          {selectedLocation && (
-            <Marker position={[selectedLocation.lat, selectedLocation.lon]} />
+          <MapClickHandler onLocationSelect={handleLocationSelect} />
+
+          {originLocation && (
+            <Marker position={[originLocation.lat, originLocation.lon]} />
           )}
+
+          {destinationLocation && (
+            <Marker position={[destinationLocation.lat, destinationLocation.lon]} />
+          )}
+
           <LocateUser />
         </MapContainer>
 
-        {weatherResult.prediction && <WeatherAwareResult weatherResult={weatherResult} isDark={isDark} />}
+        {weatherResult && (
+          <WeatherAwareResult weatherResult={weatherResult} isDark={isDark} />
+        )}
 
         <button
           className="btn btn-primary btn-dark-mode"
