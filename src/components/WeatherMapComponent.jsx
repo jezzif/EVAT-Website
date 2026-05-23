@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useContext, useCallback } from 'react';
-import { MapContainer, TileLayer, useMapEvents, Marker } from 'react-leaflet';
+import { MapContainer, TileLayer, useMapEvents, Marker, Polyline } from 'react-leaflet';
+import polyline from '@mapbox/polyline';
 import { UserContext } from '../context/user';
 import { predictWeatherAwareRouting } from '../services/weatherAwareRoutingService';
 
@@ -71,6 +72,7 @@ export default function Map() {
   const [acOn, setAcOn] = useState(true);
 
   const [weatherResult, setWeatherResult] = useState(null);
+  const [routeCoordinates, setRouteCoordinates] = useState([]);
   const [weatherLoading, setWeatherLoading] = useState(false);
   const [weatherError, setWeatherError] = useState('');
 
@@ -98,6 +100,7 @@ export default function Map() {
   const handleLocationSelect = async (location) => {
     setWeatherResult(null);
     setWeatherError("");
+    setRouteCoordinates([]);
 
     try {
       const address = await getAddressFromCoordinates(location.lat, location.lon);
@@ -120,7 +123,7 @@ export default function Map() {
     }
   };
 
-  // This will be used later by Google Place Autocomplete
+  // Used by Google Place Autocomplete
   const handlePlaceSelect = (fieldName, place) => {
     const selectedLocation = {
       address: place.address,
@@ -137,6 +140,7 @@ export default function Map() {
 
     setWeatherResult(null);
     setWeatherError("");
+    setRouteCoordinates([]);
   };
 
   const handleCalculateEnergy = async () => {
@@ -154,7 +158,7 @@ export default function Map() {
     setWeatherError('');
 
     try {
-      // Important: backend now expects address/location text, not coordinates
+      // Backend now expects address/location text, not coordinates
       const payload = {
         origin: originLocation.address,
         destination: destinationLocation.address,
@@ -162,10 +166,21 @@ export default function Map() {
       };
 
       const data = await predictWeatherAwareRouting(payload, user?.token);
+
       setWeatherResult(data);
+
+      // Decode model/backend polyline and draw it on Leaflet map
+      if (data?.polyline) {
+        const decodedRoute = polyline.decode(data.polyline);
+        setRouteCoordinates(decodedRoute);
+      } else {
+        setRouteCoordinates([]);
+      }
+
     } catch (error) {
       console.log(error);
       setWeatherError(error.message || "Something went wrong while calculating energy.");
+      setRouteCoordinates([]);
     } finally {
       setWeatherLoading(false);
     }
@@ -177,6 +192,7 @@ export default function Map() {
     setActiveField("origin");
     setAcOn(true);
     setWeatherResult(null);
+    setRouteCoordinates([]);
     setWeatherError("");
   }, []);
 
@@ -258,8 +274,6 @@ export default function Map() {
           onClick={handleCalculateEnergy}
           handleReset={handleReset}
           isDark={isDark}
-
-          // This is for the next step: Google Place Autocomplete
           onPlaceSelect={handlePlaceSelect}
         />
 
@@ -284,7 +298,16 @@ export default function Map() {
             <Marker position={[destinationLocation.lat, destinationLocation.lon]} />
           )}
 
-
+          {routeCoordinates.length > 0 && (
+            <Polyline
+              positions={routeCoordinates}
+              pathOptions={{
+                color: "#16a34a",
+                weight: 6,
+                opacity: 0.85,
+              }}
+            />
+          )}
         </MapContainer>
 
         {weatherResult?.steps && (
