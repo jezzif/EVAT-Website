@@ -2,7 +2,7 @@ import React, { useEffect, useState, useContext, useCallback } from 'react';
 import { MapContainer, TileLayer, useMapEvents, Marker } from 'react-leaflet';
 import { UserContext } from '../context/user';
 import { predictWeatherAwareRouting } from '../services/weatherAwareRoutingService';
-import LocateUser from './LocateUser';
+
 import WeatherAwareSelection from './WeatherAwareSelection';
 import WeatherAwareResult from './WeatherAwareResult';
 
@@ -13,7 +13,7 @@ import '../styles/Buttons.css';
 import '../styles/Elements.css';
 import '../styles/Fonts.css';
 
-// Watches map bounds (bbox) and reports them upward
+// Watches map bounds and reports them upward
 function BoundsWatcher({ onChange }) {
   const map = useMapEvents({
     moveend() {
@@ -30,6 +30,7 @@ function BoundsWatcher({ onChange }) {
   return null;
 }
 
+// Handles map click
 function MapClickHandler({ onLocationSelect }) {
   useMapEvents({
     click(e) {
@@ -49,10 +50,9 @@ export default function Map() {
   const [bbox, setBbox] = useState(null);
   const [loading] = useState(false);
 
-  // local UI state for the floating dark-mode button icon
   const [isDark, setIsDark] = useState(false);
 
-  // New route selection state
+  // Route selection state
   const [originLocation, setOriginLocation] = useState(null);
   const [destinationLocation, setDestinationLocation] = useState(null);
   const [activeField, setActiveField] = useState("origin");
@@ -62,12 +62,65 @@ export default function Map() {
   const [weatherLoading, setWeatherLoading] = useState(false);
   const [weatherError, setWeatherError] = useState('');
 
-  const handleLocationSelect = (location) => {
-    if (activeField === "origin") {
-      setOriginLocation(location);
+  // Convert map coordinates into a readable address using Google Geocoding API
+  const getAddressFromCoordinates = async (lat, lon) => {
+    const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+
+    if (!apiKey) {
+      throw new Error("Google Maps API key is missing. Please add it to your .env file.");
+    }
+
+    const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lon}&key=${apiKey}`;
+
+    const response = await fetch(url);
+    const data = await response.json();
+
+    if (data.status === "OK" && data.results.length > 0) {
+      return data.results[0].formatted_address;
+    }
+
+    throw new Error("Could not convert this map location into an address.");
+  };
+
+  // When user clicks map, convert coordinates into address first
+  const handleLocationSelect = async (location) => {
+    setWeatherResult(null);
+    setWeatherError("");
+
+    try {
+      const address = await getAddressFromCoordinates(location.lat, location.lon);
+
+      const selectedLocation = {
+        address: address,
+        lat: location.lat,
+        lon: location.lon,
+      };
+
+      if (activeField === "origin") {
+        setOriginLocation(selectedLocation);
+        setActiveField("destination");
+      } else {
+        setDestinationLocation(selectedLocation);
+      }
+    } catch (error) {
+      console.log(error);
+      setWeatherError(error.message || "Could not read this map location.");
+    }
+  };
+
+  // This will be used later by Google Place Autocomplete
+  const handlePlaceSelect = (fieldName, place) => {
+    const selectedLocation = {
+      address: place.address,
+      lat: place.lat,
+      lon: place.lon,
+    };
+
+    if (fieldName === "origin") {
+      setOriginLocation(selectedLocation);
       setActiveField("destination");
     } else {
-      setDestinationLocation(location);
+      setDestinationLocation(selectedLocation);
     }
 
     setWeatherResult(null);
@@ -76,7 +129,12 @@ export default function Map() {
 
   const handleCalculateEnergy = async () => {
     if (!originLocation || !destinationLocation) {
-      setWeatherError("Please select both origin and destination on the map.");
+      setWeatherError("Please select both origin and destination.");
+      return;
+    }
+
+    if (!originLocation.address || !destinationLocation.address) {
+      setWeatherError("Please select valid origin and destination addresses.");
       return;
     }
 
@@ -84,9 +142,10 @@ export default function Map() {
     setWeatherError('');
 
     try {
+      // Important: backend now expects address/location text, not coordinates
       const payload = {
-        origin: `${originLocation.lat},${originLocation.lon}`,
-        destination: `${destinationLocation.lat},${destinationLocation.lon}`,
+        origin: originLocation.address,
+        destination: destinationLocation.address,
         ac_on: acOn,
       };
 
@@ -109,7 +168,6 @@ export default function Map() {
     setWeatherError("");
   }, []);
 
-  // toggle dark mode only when inside the Map page
   useEffect(() => {
     if (isDark) {
       document.body.classList.add("dark-mode");
@@ -188,6 +246,9 @@ export default function Map() {
           onClick={handleCalculateEnergy}
           handleReset={handleReset}
           isDark={isDark}
+
+          // This is for the next step: Google Place Autocomplete
+          onPlaceSelect={handlePlaceSelect}
         />
 
         <MapContainer
@@ -203,15 +264,15 @@ export default function Map() {
           <BoundsWatcher onChange={setBbox} />
           <MapClickHandler onLocationSelect={handleLocationSelect} />
 
-          {originLocation && (
+          {originLocation && originLocation.lat && originLocation.lon && (
             <Marker position={[originLocation.lat, originLocation.lon]} />
           )}
 
-          {destinationLocation && (
+          {destinationLocation && destinationLocation.lat && destinationLocation.lon && (
             <Marker position={[destinationLocation.lat, destinationLocation.lon]} />
           )}
 
-          <LocateUser />
+
         </MapContainer>
 
         {weatherResult && (
