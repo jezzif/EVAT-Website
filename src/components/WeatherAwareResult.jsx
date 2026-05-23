@@ -228,27 +228,6 @@ const WeatherAwareResult = ({ result }) => {
                                     )}
                                 </div>
                             </div>
-
-                            <SectionTitle title="Turn-by-turn Directions" />
-
-                            <div style={styles.stepsList}>
-                                {steps.length > 0 ? (
-                                    steps.map((step, index) => (
-                                        <div key={index} style={styles.stepItem}>
-                                            <strong>
-                                                {index + 1}. {cleanInstruction(step.instruction)}
-                                            </strong>
-
-                                            <p>
-                                                Distance: {formatNumber(step.distance_m / 1000, 2)} km ·
-                                                Duration: {formatNumber(step.duration_s / 60, 1)} min
-                                            </p>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <p style={styles.emptyText}>No route steps available.</p>
-                                )}
-                            </div>
                         </div>
                     </div>
                 </div>

@@ -5,6 +5,7 @@ import { predictWeatherAwareRouting } from '../services/weatherAwareRoutingServi
 
 import WeatherAwareSelection from './WeatherAwareSelection';
 import WeatherAwareResult from './WeatherAwareResult';
+import TurnByTurnOverlay from "./TurnByTurnOverlayRouting";
 
 // styles
 import '../styles/Root.css';
@@ -285,6 +286,10 @@ export default function Map() {
 
 
         </MapContainer>
+
+        {weatherResult?.steps && (
+          <TurnByTurnOverlay steps={weatherResult.steps} isDark={isDark} />
+        )}
 
         {weatherResult && (
           <div style={styles.resultPanel}>
