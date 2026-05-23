@@ -44,6 +44,17 @@ function MapClickHandler({ onLocationSelect }) {
   return null;
 }
 
+const styles = {
+  resultPanel: {
+    position: "absolute",
+    right: "24px",
+    bottom: "80px",
+    width: "420px",
+    maxWidth: "calc(100% - 48px)",
+    zIndex: 1000,
+  },
+};
+
 export default function Map() {
   const { user } = useContext(UserContext);
 
@@ -276,7 +287,9 @@ export default function Map() {
         </MapContainer>
 
         {weatherResult && (
-          <WeatherAwareResult weatherResult={weatherResult} isDark={isDark} />
+          <div style={styles.resultPanel}>
+            <WeatherAwareResult result={weatherResult} isDark={isDark} />
+          </div>
         )}
 
         <button
