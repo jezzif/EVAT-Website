@@ -54,8 +54,8 @@ function NavBar() {
                                 <button className='dropdown-item' onClick={() => navigate('/map')}>
                                     Map
                                 </button>
-                                <button className='dropdown-item' onClick={() => navigate('/use-cases')}>
-                                    Dashboard
+                                <button className='dropdown-item' onClick={() => navigate('/cost')}>
+                                    Cost Comparison
                                 </button>
                                 <button className='dropdown-item' onClick={() => navigate('/favourites')}>
                                     Favourite Chargers
@@ -63,6 +63,7 @@ function NavBar() {
                                 <button className='dropdown-item' onClick={() => navigate('/game')}>
                                     Rewards
                                 </button>
+                                <hr></hr>
                                 <button className='dropdown-item' onClick={() => navigate('/feedback')}>
                                     Feedback
                                 </button>
@@ -120,8 +121,6 @@ function NavBar() {
                             </>
                         )}
                         {/* ======================================================= */}
-
-                         
                     </div>
                 </div>
             </div>
@@ -141,14 +140,13 @@ function NavBar() {
 
 
             {/* Right Navbar */}
-            {/* Right Navbar */}
             <div className="right-navbar">
                 <img 
-                    src={user?.avatarURL || "defaultProfilePictures/default-white.png"}
+                    src={user.avatarURL || "defaultProfilePictures/default-white.png"} 
                     alt="User Avatar"
                     className="icon-navbar middle" 
                     onClick={() => navigate('/profile')}
-                    key={user?.avatarURL}
+                    key={user.avatarURL}
                 />
                 <button 
                     alt="Sign Out"
