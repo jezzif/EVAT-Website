@@ -23,7 +23,6 @@ import EVChatBubble from "./components/EVChatBubble";
 import Dashboard from "./pages/Dashboard";
 import EnvironmentalImpact from "./pages/EnvironmentalImpact";
 import DemandForecasting from "./pages/DemandForecasting";
-import WeatherRouting from "./pages/WeatherRouting";
 import Chatbot from "./pages/Chatbot";
 
 function App() {
@@ -58,7 +57,6 @@ function App() {
             <Route path="/environmental-impact" element={<EnvironmentalImpact />} />
             <Route path="/demand-forecasting" element={<DemandForecasting />} />
             <Route path="/congestion-prediction" element={<Map />} />
-            <Route path="/weather-routing" element={<WeatherRouting />} />
             <Route path="/chatbot" element={<Chatbot />} />
 
             {/* Catch-all Route */}
